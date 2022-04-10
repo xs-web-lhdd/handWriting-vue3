@@ -2,7 +2,8 @@ import { mutableHandlers, readonlyHandlers, shallowReadonlyHandlers } from './ba
 
 export const enum ReactiveFlags {
   IS_REACTIVE = '__v_isReactive',
-  IS_READONLY = '__v_isReadonly'
+  IS_READONLY = '__v_isReadonly',
+  IS_SHALLOW = '__v_isShallow'
 }
 
 export function reactive(raw) {
@@ -27,6 +28,10 @@ export function isReactive(value) {
 
 export function isReadonly(value) {
   return !!value[ReactiveFlags.IS_READONLY]
+}
+
+export function isShallow(value) {
+  return !!value[ReactiveFlags.IS_SHALLOW]
 }
 
 export function isProxy(value) {

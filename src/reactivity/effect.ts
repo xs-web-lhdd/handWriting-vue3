@@ -5,7 +5,7 @@ const targetMap = new WeakMap()
 let activeEffect
 let shouldTrack
 
-function isTracking() {
+export function isTracking() {
   return shouldTrack && activeEffect !== undefined
 }
  
@@ -23,17 +23,25 @@ export function track(target, key) {
     depMaps.set(key, (dep = new Set()))
   }
 
+  trackEffect(dep)
+
+}
+
+export function trackEffect(dep) {
   if(dep.has(effect)) return
 
   dep.add(activeEffect)
   activeEffect.deps.push(dep)
-
 }
 
 export function trigger(target, key) {
   const depMaps = targetMap.get(target)
   const dep = depMaps.get(key)
 
+  triggerEffect(dep)
+}
+
+export function triggerEffect(dep) {
   dep.forEach(effect => {
     // if(activeEffect !== effect) {
       if(effect.scheduler) {
@@ -44,7 +52,6 @@ export function trigger(target, key) {
     // }
   })
 }
-
 
 class ReactiveEffect {
   public scheduler: any
