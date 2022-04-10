@@ -3,8 +3,17 @@ import { extend } from '../shared'
 const targetMap = new WeakMap()
 
 let activeEffect
+let shouldTrack
+
+function isTracking() {
+  return shouldTrack && activeEffect !== undefined
+}
  
 export function track(target, key) {
+  // if(!activeEffect)  return
+  // if(!shouldTrack) return
+  if(!isTracking()) return
+
   let depMaps = targetMap.get(target)
   if(!depMaps) {
     targetMap.set(target, (depMaps = new Map()))
@@ -14,7 +23,7 @@ export function track(target, key) {
     depMaps.set(key, (dep = new Set()))
   }
 
-  if(!activeEffect)  return
+  if(dep.has(effect)) return
 
   dep.add(activeEffect)
   activeEffect.deps.push(dep)
@@ -52,8 +61,18 @@ class ReactiveEffect {
   }
 
   run() {
+
+    // 执行这里说明是已经 stop 过了 effect 函数了然后是再次触发响应式的时候见，单侧的 obj.prop++ 案例
+    if(!this.active) {
+      return this._fn()
+    }
+    
+    shouldTrack = true
     activeEffect = this
-    return this._fn()
+    const res = this._fn()
+    shouldTrack = false
+    
+    return res
   }
 
   stop() {
@@ -71,6 +90,8 @@ class ReactiveEffect {
 
 function cleanupEffect(effect) {
   effect.deps.forEach((dep: any) => dep.delete(effect))
+  // 删除完 dep，deps 置为空就行了 
+  effect.deps.length = 0
 }
 
 export function effect(fn, options: any = {}) {
